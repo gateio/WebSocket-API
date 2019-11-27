@@ -12,46 +12,44 @@ $callback type: function 回调函数，当获得数据时会调用
 Class Gateio{
 	private $key = "your key";
 	private $secret = "your secret";
-	
+
 	public $id;
 	public $method;
 	public $params;
-	
+
 	public $sign;
-	
+
 	function __construct($id,$method,$params){
 		$this->id = $id;
 		$this->method = $method;
 		$this->params = $params;
 	}
-	
+
 	function getSign($nonce){
 		$sign = hash_hmac('sha512',$nonce,$this->secret,true);
 		$ss = base64_encode($sign);
 		return $ss;
 	}
-	
+
 	function msectime() {
 		list($msec, $sec) = explode(' ', microtime());
 		$msectime =  (float)sprintf('%.0f', (floatval($msec) + floatval($sec)) * 1000);
 		return $msectime;
 	}
-	
+
 	public $flag=false;
-	
-	function request($req_str="market.btcusdt.kline.1min") {
-		$GLOBALS['req_str'] = $req_str;
-		$GLOBALS['callback'] = $callback;
+
+	function request() {
 		$worker = new Worker();
 		$worker->onWorkerStart = function($worker) {
 		// ssl需要访问443端口
 			$con = new AsyncTcpConnection('ws://ws.gateio.io:443/v3/');
-			
+
 			// 设置以ssl加密方式访问，使之成为wss
 			$con->transport = 'ssl';
-			
-			
-			
+
+
+
 			$con->onConnect = function($con) {
 				if($this->method == 'server.sign' || $this->method == 'order.query' || $this->method == 'order.subscribe' || $this->method == 'order.update' ||
 				$this->method == 'order.unsubscribe' || $this->method == 'balance.query' || $this->method == 'balance.subscribe' ||
@@ -65,7 +63,7 @@ Class Gateio{
 					$this->flag=true;
 					$con->send($data);
 				}else{
-				
+
 					$data = json_encode([
 						"id" => $this->id,
 						"method" => $this->method,
@@ -74,8 +72,8 @@ Class Gateio{
 					$con->send($data);
 				}
 			};
-		
-			
+
+
 			$con->onMessage = function($con, $data) {
 				echo $data;
 				if($this->flag){
@@ -90,7 +88,7 @@ Class Gateio{
 					$this->flag=false;
 				}
 			};
-			
+
 			$con->connect();
 		};
 
