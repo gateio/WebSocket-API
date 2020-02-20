@@ -10,8 +10,8 @@ import base64
 import hashlib
 
 def get_sign(secret_key, message):
-	h = hmac.new(secret_key, message, hashlib.sha512)
-	return base64.b64encode(h.digest())
+	h = (base64.b64encode(hmac.new(secret_key.encode('utf-8'), message.encode('utf-8'), hashlib.sha512).digest())).decode()
+	return h
 
 class GateWs:
 	def __init__(self, url, apiKey, secretKey):
